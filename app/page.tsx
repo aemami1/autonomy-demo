@@ -161,8 +161,12 @@ export default function AutonomyDemo() {
       const prev = JSON.parse(localStorage.getItem(key) || "[]");
       prev.push(payload);
       localStorage.setItem(key, JSON.stringify(prev));
-      const rows = [["variant", "choice", "timestamp", "userAgent"], ...prev.map((r: any) => [r.variant, r.choice, r.ts, r.userAgent])];
-      const csv = rows.map((row) => row.map((c) => JSON.stringify(c ?? "")).join(",")).join("\n");
+      const rows: string[][] = [["variant", "choice", "timestamp", "userAgent"],
+        ...prev.map((r: any) => [String(r.variant), String(r.choice), String(r.ts), String(r.userAgent)])];
+      const csv = rows
+        .map((row: string[]) => row.map((c: string) => JSON.stringify(c ?? "")).join(","))
+        .join("
+");
       const blob = new Blob([csv], { type: "text/csv" });
       setDownloadUrl(URL.createObjectURL(blob));
     } catch {}
