@@ -165,8 +165,7 @@ export default function AutonomyDemo() {
         ...prev.map((r: any) => [String(r.variant), String(r.choice), String(r.ts), String(r.userAgent)])];
       const csv = rows
         .map((row: string[]) => row.map((c: string) => JSON.stringify(c ?? "")).join(","))
-        .join("
-");
+        .join("");
       const blob = new Blob([csv], { type: "text/csv" });
       setDownloadUrl(URL.createObjectURL(blob));
     } catch {}
