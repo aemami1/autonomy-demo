@@ -1,30 +1,104 @@
 'use client';
 
 import { useEffect, useMemo, useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Users, Shield, Brain, Landmark, BookOpen, Palette } from "lucide-react";
 
+/**
+ * NOTE: This version removes shadcn/ui imports so it builds on a fresh Next.js app
+ * with only Tailwind and lucide-react installed. The small UI primitives below
+ * (Card, Button, Badge, etc.) are minimal Tailwind-styled components.
+ */
+
+// --- Minimal UI primitives (no external UI lib) -------------------------------
+function classNames(...parts: Array<string | false | null | undefined>) {
+  return parts.filter(Boolean).join(" ");
+}
+
+function Card({ className, children }: { className?: string; children: React.ReactNode }) {
+  return <div className={classNames("rounded-2xl border bg-white", className)}>{children}</div>;
+}
+function CardHeader({ className, children }: { className?: string; children: React.ReactNode }) {
+  return <div className={classNames("px-4 py-3 border-b flex items-center", className)}>{children}</div>;
+}
+function CardContent({ className, children }: { className?: string; children: React.ReactNode }) {
+  return <div className={classNames("px-4 py-4", className)}>{children}</div>;
+}
+function CardTitle({ className, children }: { className?: string; children: React.ReactNode }) {
+  return <div className={classNames("font-semibold", className)}>{children}</div>;
+}
+function Button({
+  className,
+  children,
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      className={classNames(
+        "inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-medium border",
+        "bg-gray-50 hover:bg-gray-100 active:bg-gray-200",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+function Badge({ className, children }: { className?: string; children: React.ReactNode }) {
+  return (
+    <span className={classNames("inline-flex items-center rounded-lg border px-2 py-0.5 text-xs bg-gray-50", className)}>
+      {children}
+    </span>
+  );
+}
+
+// --- Topics master list -------------------------------------------------------
 const TOPICS = [
-  { id: "mental-health", title: "AI & Mental Health", icon: Brain,
+  {
+    id: "mental-health",
+    title: "AI & Mental Health",
+    icon: Brain,
     neutralCopy: "Explore AI’s impact on wellbeing, therapy, and mental health services.",
-    nudgedCopy: "Discover surprising ways AI is transforming wellbeing—from therapy chatbots to mood tracking and support systems." },
-  { id: "defenses", title: "AI Defenses", icon: Shield,
+    nudgedCopy:
+      "Discover surprising ways AI is transforming wellbeing—from therapy chatbots to mood tracking and support systems.",
+  },
+  {
+    id: "defenses",
+    title: "AI Defenses",
+    icon: Shield,
     neutralCopy: "Learn strategies to protect against harmful or malicious AI use.",
-    nudgedCopy: "How do we defend against misuse? A practical tour of threat models, guardrails, and red-teaming." },
-  { id: "personal-info", title: "Personal Information & AI", icon: Users,
+    nudgedCopy:
+      "How do we defend against misuse? A practical tour of threat models, guardrails, and red-teaming.",
+  },
+  {
+    id: "personal-info",
+    title: "Personal Information & AI",
+    icon: Users,
     neutralCopy: "Understand how AI collects, uses, and safeguards personal data.",
-    nudgedCopy: "What do models know about you? Tracking, profiling, and ways to reduce exposure." },
-  { id: "politics", title: "AI & Politics", icon: Landmark,
+    nudgedCopy:
+      "What do models know about you? Tracking, profiling, and ways to reduce exposure.",
+  },
+  {
+    id: "politics",
+    title: "AI & Politics",
+    icon: Landmark,
     neutralCopy: "Examine AI’s role in elections, governance, and public opinion shaping.",
-    nudgedCopy: "Campaigns, policy, and persuasion: AI’s growing influence in democratic processes." },
-  { id: "education", title: "AI in Education", icon: BookOpen,
+    nudgedCopy: "Campaigns, policy, and persuasion: AI’s growing influence in democratic processes.",
+  },
+  {
+    id: "education",
+    title: "AI in Education",
+    icon: BookOpen,
     neutralCopy: "Discuss AI as a tutor, grader, and student tool.",
-    nudgedCopy: "From automated feedback to study companions: where AI helps and where it harms." },
-  { id: "creativity", title: "AI & Creativity", icon: Palette,
+    nudgedCopy: "From automated feedback to study companions: where AI helps and where it harms.",
+  },
+  {
+    id: "creativity",
+    title: "AI & Creativity",
+    icon: Palette,
     neutralCopy: "Discover how AI is used in art, music, and storytelling.",
-    nudgedCopy: "Art, music, and writing with models—new workflows and the debate over authorship." }
+    nudgedCopy: "Art, music, and writing with models—new workflows and the debate over authorship.",
+  },
 ] as const;
 
 type Topic = typeof TOPICS[number];
@@ -45,7 +119,7 @@ function getQueryParam(name: string) {
 }
 
 export default function AutonomyDemo() {
-  // Default to nudged in canvas preview; allow URL override via ?v=neutral or ?v=nudged
+  // Default to nudged in preview; override via ?v=neutral or ?v=nudged
   const [variant, setVariant] = useState<"neutral" | "nudged">("nudged");
   const debug = getQueryParam("debug") === "1";
   const targetId = "mental-health";
@@ -101,7 +175,6 @@ export default function AutonomyDemo() {
       <div className="w-full max-w-4xl">
         <header className="mb-6 text-center">
           <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">Vote for our special topics lecture</h1>
-          {/* Intentionally not showing the variant name to students */}
         </header>
 
         {!submitted ? (
@@ -109,20 +182,29 @@ export default function AutonomyDemo() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {topics.map((t) => (
                 <Card key={t.id} className={variant === "nudged" && t.id === targetId ? "relative border-2 border-emerald-400 shadow-lg scale-[1.03]" : ""}>
-                  <CardHeader className="flex flex-row items-center gap-3">
-                    <div className={variant === "nudged" && t.id === targetId ? "p-2 rounded-xl bg-emerald-50" : "p-2 rounded-xl bg-gray-100"}>
+                  <CardHeader className="gap-3">
+                    <div className={variant === "nudged" && t.id === targetId ? "p-2 rounded-xl bg-emerald-50 mr-3" : "p-2 rounded-xl bg-gray-100 mr-3"}>
                       <t.icon className="w-6 h-6" />
                     </div>
                     <div className="flex-1">
                       <CardTitle className="text-base md:text-lg flex items-center gap-2">
                         {t.title}
                         {variant === "nudged" && t.id === targetId && (
-                          <Badge variant="secondary" className="text-xs">Guest lecture: Emily Wall</Badge>
+                          <Badge className="text-xs">Guest lecture: Emily Wall</Badge>
                         )}
                       </CardTitle>
                     </div>
-                    <div>
-                      <input type="radio" name="topic" value={t.id} className="w-5 h-5" checked={choice === t.id} onChange={() => setChoice(t.id)} disabled={variant === "nudged" && t.id !== targetId && !expanded[t.id]} aria-describedby={`${t.id}-desc`} />
+                    <div className="ml-auto">
+                      <input
+                        type="radio"
+                        name="topic"
+                        value={t.id}
+                        className="w-5 h-5"
+                        checked={choice === t.id}
+                        onChange={() => setChoice(t.id)}
+                        disabled={variant === "nudged" && t.id !== targetId && !expanded[t.id]}
+                        aria-describedby={`${t.id}-desc`}
+                      />
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -135,7 +217,7 @@ export default function AutonomyDemo() {
                         ) : (
                           <div>
                             {!expanded[t.id] ? (
-                              <Button type="button" onClick={() => handleExpand(t.id)} variant="outline" className="text-xs">Read more</Button>
+                              <Button type="button" onClick={() => handleExpand(t.id)} className="text-xs">Read more</Button>
                             ) : (
                               <p id={`${t.id}-desc`} className="text-sm text-gray-700">{t.neutralCopy}</p>
                             )}
@@ -161,16 +243,19 @@ export default function AutonomyDemo() {
           <Card className="p-6 text-center">
             <h2 className="text-xl font-semibold">Thanks for voting!</h2>
             <p className="text-sm text-gray-600 mt-2">You chose: <span className="font-medium">{prettyTitle(choice!, TOPICS)}</span></p>
-            {/* Intentionally not showing the variant to students on the thank-you screen */}
-            {downloadUrl && <a href={downloadUrl} download={`autonomy-demo.csv`} className="inline-block mt-4 text-sm underline">Download local CSV backup</a>}
+            {downloadUrl && (
+              <a href={downloadUrl} download={`autonomy-demo.csv`} className="inline-block mt-4 text-sm underline">
+                Download local CSV backup
+              </a>
+            )}
           </Card>
         )}
 
         {debug && (
           <div className="mt-4 text-center">
             <div className="inline-flex gap-2">
-              <Button size="sm" variant={variant === "neutral" ? "default" : "outline"} onClick={() => setVariant("neutral")}>Preview Neutral</Button>
-              <Button size="sm" variant={variant === "nudged" ? "default" : "outline"} onClick={() => setVariant("nudged")}>Preview Nudged</Button>
+              <Button className={variant === "neutral" ? "bg-gray-200" : ""} onClick={() => setVariant("neutral")}>Preview Neutral</Button>
+              <Button className={variant === "nudged" ? "bg-gray-200" : ""} onClick={() => setVariant("nudged")}>Preview Nudged</Button>
             </div>
           </div>
         )}
