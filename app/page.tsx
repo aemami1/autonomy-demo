@@ -3,14 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { CheckCircle, Users, Shield, Brain, Landmark, BookOpen, Palette } from "lucide-react";
 
-/**
- * NOTE: This version removes shadcn/ui imports so it builds on a fresh Next.js app
- * with only Tailwind and lucide-react installed. The small UI primitives below
- * (Card, Button, Badge, etc.) are minimal Tailwind-styled components.
- */
-
 // --- Minimal UI primitives (no external UI lib) -------------------------------
 function classNames(...parts: Array<string | false | null | undefined>) {
+  // NOTE: Use space join (not newlines) so Tailwind classes work correctly
   return parts.filter(Boolean).join(" ");
 }
 
@@ -26,11 +21,7 @@ function CardContent({ className, children }: { className?: string; children: Re
 function CardTitle({ className, children }: { className?: string; children: React.ReactNode }) {
   return <div className={classNames("font-semibold", className)}>{children}</div>;
 }
-function Button({
-  className,
-  children,
-  ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+function Button({ className, children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
       className={classNames(
@@ -62,43 +53,11 @@ const TOPICS = [
     nudgedCopy:
       "Discover surprising ways AI is transforming wellbeing—from therapy chatbots to mood tracking and support systems.",
   },
-  {
-    id: "defenses",
-    title: "AI Defenses",
-    icon: Shield,
-    neutralCopy: "Learn strategies to protect against harmful or malicious AI use.",
-    nudgedCopy:
-      "How do we defend against misuse? A practical tour of threat models, guardrails, and red-teaming.",
-  },
-  {
-    id: "personal-info",
-    title: "Personal Information & AI",
-    icon: Users,
-    neutralCopy: "Understand how AI collects, uses, and safeguards personal data.",
-    nudgedCopy:
-      "What do models know about you? Tracking, profiling, and ways to reduce exposure.",
-  },
-  {
-    id: "politics",
-    title: "AI & Politics",
-    icon: Landmark,
-    neutralCopy: "Examine AI’s role in elections, governance, and public opinion shaping.",
-    nudgedCopy: "Campaigns, policy, and persuasion: AI’s growing influence in democratic processes.",
-  },
-  {
-    id: "education",
-    title: "AI in Education",
-    icon: BookOpen,
-    neutralCopy: "Discuss AI as a tutor, grader, and student tool.",
-    nudgedCopy: "From automated feedback to study companions: where AI helps and where it harms.",
-  },
-  {
-    id: "creativity",
-    title: "AI & Creativity",
-    icon: Palette,
-    neutralCopy: "Discover how AI is used in art, music, and storytelling.",
-    nudgedCopy: "Art, music, and writing with models—new workflows and the debate over authorship.",
-  },
+  { id: "defenses", title: "AI Defenses", icon: Shield, neutralCopy: "Learn strategies to protect against harmful or malicious AI use.", nudgedCopy: "How do we defend against misuse? A practical tour of threat models, guardrails, and red-teaming." },
+  { id: "personal-info", title: "Personal Information & AI", icon: Users, neutralCopy: "Understand how AI collects, uses, and safeguards personal data.", nudgedCopy: "What do models know about you? Tracking, profiling, and ways to reduce exposure." },
+  { id: "politics", title: "AI & Politics", icon: Landmark, neutralCopy: "Examine AI’s role in elections, governance, and public opinion shaping.", nudgedCopy: "Campaigns, policy, and persuasion: AI’s growing influence in democratic processes." },
+  { id: "education", title: "AI in Education", icon: BookOpen, neutralCopy: "Discuss AI as a tutor, grader, and student tool.", nudgedCopy: "From automated feedback to study companions: where AI helps and where it harms." },
+  { id: "creativity", title: "AI & Creativity", icon: Palette, neutralCopy: "Discover how AI is used in art, music, and storytelling.", nudgedCopy: "Art, music, and writing with models—new workflows and the debate over authorship." },
 ] as const;
 
 type Topic = typeof TOPICS[number];
@@ -123,6 +82,9 @@ export default function AutonomyDemo() {
   const [variant, setVariant] = useState<"neutral" | "nudged">("nudged");
   const debug = getQueryParam("debug") === "1";
   const targetId = "mental-health";
+
+  // 👉 Replace with your own deployed Apps Script Web App URL
+  const ENDPOINT = "https://script.google.com/macros/s/AKfycbxVviwSj1tQyYX6-LmIHssvmxq2C6g3jmcOp1_cM_Fukd-d3Fgxrn8f3YUJnPnM791YFw/exec";
 
   useEffect(() => {
     const v = (getQueryParam("v") || "").toLowerCase();
@@ -156,11 +118,24 @@ export default function AutonomyDemo() {
     if (!choice) return;
 
     const payload = { variant, choice, ts: new Date().toISOString(), userAgent: navigator.userAgent };
+
+    // Try to record centrally (Google Sheet). If it fails, we still record locally.
+    if (ENDPOINT && !ENDPOINT.includes("SCRIPT_ID_GOES_HERE")) {
+      fetch(ENDPOINT, {
+        method: "POST",
+        // send as text/plain to avoid preflight; we don't read the response anyway
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload),
+        mode: "no-cors",
+      }).catch(() => {});
+    }
+
     try {
       const key = `autonomy-demo-local-${variant}`;
       const prev = JSON.parse(localStorage.getItem(key) || "[]");
       prev.push(payload);
       localStorage.setItem(key, JSON.stringify(prev));
+
       const rows: string[][] = [["variant", "choice", "timestamp", "userAgent"],
         ...prev.map((r: any) => [String(r.variant), String(r.choice), String(r.ts), String(r.userAgent)])];
       const csv = rows
@@ -259,6 +234,11 @@ export default function AutonomyDemo() {
             <div className="inline-flex gap-2">
               <Button className={variant === "neutral" ? "bg-gray-200" : ""} onClick={() => setVariant("neutral")}>Preview Neutral</Button>
               <Button className={variant === "nudged" ? "bg-gray-200" : ""} onClick={() => setVariant("nudged")}>Preview Nudged</Button>
+            </div>
+            {/* Quick self-checks */}
+            <div className="mt-3 text-xs text-left inline-block bg-white border rounded-md p-2">
+              <div>prettyTitle unknown fallback: {prettyTitle("__x__", TOPICS) === "__x__" ? "✓" : "✗"}</div>
+              <div>prettyTitle match: {prettyTitle("mental-health", TOPICS) === "AI & Mental Health" ? "✓" : "✗"}</div>
             </div>
           </div>
         )}
